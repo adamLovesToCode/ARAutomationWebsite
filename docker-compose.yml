@@ -28,7 +28,7 @@ services:
       context: ./backend
       dockerfile: ../docker/Dockerfile.backend
     container_name: ar-automation-strapi
-    restart: unless-stopped
+    # restart: unless-stopped
     env_file: .env
     environment:
       DATABASE_CLIENT: postgres
