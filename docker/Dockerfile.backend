@@ -19,11 +19,8 @@ RUN npm install
 # Copy application files
 COPY . .
 
-# Build the admin panel
-RUN npm run build
-
 # Expose Strapi port
 EXPOSE 1337
 
-# Start Strapi
+# Start Strapi in development mode (builds on startup)
 CMD ["npm", "run", "develop"]
