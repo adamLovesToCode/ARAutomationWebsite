@@ -1,0 +1,34 @@
+{
+  "name": "ar-automation-backend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A Strapi application for AR Automation",
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "build": "strapi build",
+    "strapi": "strapi"
+  },
+  "dependencies": {
+    "@strapi/strapi": "^4.25.0",
+    "@strapi/plugin-users-permissions": "^4.25.0",
+    "@strapi/plugin-i18n": "^4.25.0",
+    "pg": "^8.11.0",
+    "better-sqlite3": "^9.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "typescript": "^5.4.0"
+  },
+  "author": {
+    "name": "AR Automation Team"
+  },
+  "strapi": {
+    "uuid": "generate-on-first-run"
+  },
+  "engines": {
+    "node": ">=18.0.0 <=20.x.x",
+    "npm": ">=6.0.0"
+  },
+  "license": "MIT"
+}

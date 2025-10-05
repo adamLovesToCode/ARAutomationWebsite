@@ -1,0 +1,33 @@
+{
+  "name": "ar-automation-website",
+  "version": "1.0.0",
+  "description": "AR Automation Website - Next.js + Strapi CMS",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "docker-compose up",
+    "dev:build": "docker-compose up --build",
+    "down": "docker-compose down",
+    "down:volumes": "docker-compose down -v",
+    "logs": "docker-compose logs -f",
+    "logs:frontend": "docker-compose logs -f frontend",
+    "logs:strapi": "docker-compose logs -f strapi",
+    "logs:db": "docker-compose logs -f postgres",
+    "frontend:install": "cd frontend && npm install",
+    "backend:install": "cd backend && npm install",
+    "install:all": "npm run frontend:install && npm run backend:install",
+    "clean": "docker-compose down -v && rm -rf frontend/node_modules backend/node_modules frontend/.next backend/.cache backend/build"
+  },
+  "keywords": [
+    "nextjs",
+    "strapi",
+    "docker",
+    "cms",
+    "ar-automation"
+  ],
+  "author": "AR Automation Team",
+  "license": "MIT"
+}

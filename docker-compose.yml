@@ -1,0 +1,87 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ar-automation-postgres
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-strapi}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-strapi}
+      POSTGRES_DB: ${DATABASE_NAME:-strapi}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ar-automation-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-strapi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Strapi CMS Backend
+  strapi:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: ar-automation-strapi
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:-strapi}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-strapi}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-strapi}
+      NODE_ENV: ${NODE_ENV:-development}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - strapi-uploads:/app/public/uploads
+    ports:
+      - "1337:1337"
+    networks:
+      - ar-automation-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run develop
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+      args:
+        NODE_ENV: ${NODE_ENV:-development}
+    container_name: ar-automation-frontend
+    # restart: unless-stopped
+    env_file: .env
+    environment:
+      NEXT_PUBLIC_STRAPI_API_URL: http://strapi:1337
+      NODE_ENV: ${NODE_ENV:-development}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    networks:
+      - ar-automation-network
+    depends_on:
+      - strapi
+    command: npm run dev
+
+volumes:
+  postgres-data:
+    driver: local
+  strapi-uploads:
+    driver: local
+
+networks:
+  ar-automation-network:
+    driver: bridge
