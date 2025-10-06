@@ -109,21 +109,33 @@ ARAutomationWebsite/
 - **Server Components**: Zero-bundle server-side rendering
 
 ### TypeScript Integration (MANDATORY)
-- **MUST use `ReactElement` instead of `JSX.Element`** for return types
-- **MUST import types from 'react'** explicitly
-- **NEVER use `JSX.Element` namespace** - use React types directly
+- **PREFER `React.ReactNode` for most cases** - Most flexible for children and return types
+- **AVOID explicit return types** unless they add value for type safety
+- **IMPORT types from 'react'** explicitly when needed
+- **USE `ReactElement` when specific element constraints are needed**
 
 ```typescript
-// ✅ CORRECT: Modern React 18 typing
-import { ReactElement } from 'react';
+// ✅ PREFERRED: Modern React 18 typing
+import { ReactNode } from 'react';
 
-function MyComponent(): ReactElement {
+function MyComponent({ children }: { children: ReactNode }) {
+  return <div>{children}</div>; // No explicit return type needed
+}
+
+// ✅ ACCEPTABLE: When explicit typing helps
+import { ReactElement } from 'react';
+function SpecificComponent(): ReactElement<'div'> {
   return <div>Content</div>;
 }
 
-// ❌ FORBIDDEN: Legacy JSX namespace
-function MyComponent(): JSX.Element {  // Cannot find namespace 'JSX'
+// ✅ ACCEPTABLE: JSX.Element is valid in modern TypeScript
+function MyComponent(): JSX.Element {
   return <div>Content</div>;
+}
+
+// ❌ AVOID: Unnecessary explicit return types
+function SimpleComponent(): ReactElement {
+  return <div>Simple content</div>; // Type can be inferred
 }
 ```
 
@@ -132,10 +144,22 @@ function MyComponent(): JSX.Element {  // Cannot find namespace 'JSX'
 ### Current Configuration (DO NOT MODIFY)
 The project uses the existing TypeScript configuration. Key requirements:
 - **NEVER use `any` type** - use `unknown` if type is truly unknown
-- **MUST have explicit return types** for all functions and components
+- **USE explicit return types** when they improve type safety or API clarity
 - **MUST use proper generic constraints** for reusable components
 - **MUST use type inference from Zod schemas** using `z.infer<typeof schema>`
 - **NEVER use `@ts-ignore`** or `@ts-expect-error` - fix the type issue properly
+
+### TypeScript 5.4 Configuration Details
+- **Strict mode enabled**: Includes strictNullChecks, strictFunctionTypes, etc.
+- **Incremental compilation**: Supported for large Next.js applications  
+- **TypeScript 5.1.3+**: Required for async Server Components
+- **Type checking optimization**: Use incremental builds in development
+
+### Advanced TypeScript Features
+- **Satisfies operator**: Use for better type inference with object literals
+- **Template literal types**: Leverage for API endpoint typing
+- **Conditional types**: Useful for complex component prop relationships
+- **Branded types**: Required for ID types as mandated in the Zod section
 
 ## 📦 Dependencies & Stack
 
@@ -169,7 +193,7 @@ npm install -D jest @testing-library/react @testing-library/jest-dom @testing-li
 npm install -D playwright @playwright/test
 
 # shadcn/ui setup
-npx shadcn-ui@latest init
+npx shadcn@latest init
 ```
 
 ## 🛡️ Data Validation with Zod (MANDATORY FOR ALL EXTERNAL DATA)
@@ -313,6 +337,20 @@ export async function getArticle(slug: string) {
 }
 ```
 
+### Strapi OpenAPI Integration (2024 Best Practice)
+
+For automatic type generation instead of manual Zod schemas:
+
+```bash
+# Install Strapi OpenAPI plugin
+npm install @strapi/plugin-documentation
+
+# Generate TypeScript types automatically
+npx openapi-typescript http://localhost:1337/documentation/v1.0.0/full.json -o types/strapi-api.ts
+```
+
+This approach generates types directly from your Strapi API schema, reducing manual maintenance and ensuring type accuracy.
+
 ### Form Validation with React Hook Form
 ```typescript
 import { useForm } from 'react-hook-form';
@@ -364,7 +402,7 @@ function ContactForm(): ReactElement {
 
 ### Test Configuration
 ```javascript
-// jest.config.js
+// jest.config.js (Jest 29.7+ with Next.js 14)
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
@@ -373,7 +411,15 @@ const createJestConfig = nextJest({
 
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testEnvironment: 'jsdom',
+  testEnvironment: 'jsdom', // Must specify jsdom explicitly in Jest 29.7+
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.stories.{js,jsx,ts,tsx}',
+  ],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -384,8 +430,15 @@ const customJestConfig = {
   },
 }
 
+// Note: Server Components with async operations require E2E testing
+// Jest cannot test async Server Components - use Playwright instead
 module.exports = createJestConfig(customJestConfig)
 ```
+
+### Server Component Testing Limitations
+- **Jest limitation**: Cannot test async Server Components
+- **E2E requirement**: Use Playwright for testing Server Components with data fetching
+- **Testing strategy**: Unit tests for Client Components, E2E for Server Components
 
 ### Component Test Example
 ```typescript
